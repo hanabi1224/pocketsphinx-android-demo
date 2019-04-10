@@ -64,6 +64,8 @@ public class PocketSphinxActivity extends Activity implements
     private static final String PHONE_SEARCH = "phones";
     private static final String MENU_SEARCH = "menu";
 
+    private static final String DEFAULT_THEME = FORECAST_SEARCH;
+
     /* Keyword we are looking for to activate menu */
     private static final String KEYPHRASE = "oh mighty computer";
 
@@ -121,7 +123,7 @@ public class PocketSphinxActivity extends Activity implements
                 ((TextView) activityReference.get().findViewById(R.id.caption_text))
                         .setText("Failed to init recognizer " + result);
             } else {
-                activityReference.get().switchSearch(KWS_SEARCH);
+                activityReference.get().switchSearch(DEFAULT_THEME);
             }
         }
     }
@@ -163,6 +165,7 @@ public class PocketSphinxActivity extends Activity implements
             return;
 
         String text = hypothesis.getHypstr();
+        //makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
         if (text.equals(KEYPHRASE))
             switchSearch(MENU_SEARCH);
         else if (text.equals(DIGITS_SEARCH))
@@ -183,7 +186,7 @@ public class PocketSphinxActivity extends Activity implements
         ((TextView) findViewById(R.id.result_text)).setText("");
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
-            makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+            makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -196,8 +199,8 @@ public class PocketSphinxActivity extends Activity implements
      */
     @Override
     public void onEndOfSpeech() {
-        if (!recognizer.getSearchName().equals(KWS_SEARCH))
-            switchSearch(KWS_SEARCH);
+        if (!recognizer.getSearchName().equals(DEFAULT_THEME))
+            switchSearch(DEFAULT_THEME);
     }
 
     private void switchSearch(String searchName) {
@@ -207,7 +210,7 @@ public class PocketSphinxActivity extends Activity implements
         if (searchName.equals(KWS_SEARCH))
             recognizer.startListening(searchName);
         else
-            recognizer.startListening(searchName, 10000);
+            recognizer.startListening(searchName, 60000);
 
         String caption = getResources().getString(captions.get(searchName));
         ((TextView) findViewById(R.id.caption_text)).setText(caption);
@@ -218,36 +221,43 @@ public class PocketSphinxActivity extends Activity implements
         // of different kind and switch between them
 
         recognizer = SpeechRecognizerSetup.defaultSetup()
+                //.setAcousticModel(new File(assetsDir, "zh_cn.cd_cont_5000"))
+                //.setAcousticModel(new File(assetsDir, "zh-cn"))
+                //.setDictionary(new File(assetsDir, "zh_cn.dic"))
+                //.setSampleRate(8000)
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
 
-                .setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
+                //.setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
 
                 .getRecognizer();
         recognizer.addListener(this);
-
         /* In your application you might not need to add all those searches.
           They are added here for demonstration. You can leave just one.
          */
 
         // Create keyword-activation search.
         recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
+        //recognizer.addKeyphraseSearch(KWS_SEARCH, "你好");
 
         // Create grammar-based search for selection between demos
-        File menuGrammar = new File(assetsDir, "menu.gram");
-        recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
+        //File menuGrammar = new File(assetsDir, "menu.gram");
+        //recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
 
         // Create grammar-based search for digit recognition
-        File digitsGrammar = new File(assetsDir, "digits.gram");
-        recognizer.addGrammarSearch(DIGITS_SEARCH, digitsGrammar);
+        //File digitsGrammar = new File(assetsDir, "digits.gram");
+        //recognizer.addGrammarSearch(DIGITS_SEARCH, digitsGrammar);
 
         // Create language model search
-        File languageModel = new File(assetsDir, "weather.dmp");
+        //File languageModel = new File(assetsDir, "weather.dmp");
+        File languageModel = new File(assetsDir, "en-70k-0.2-pruned.lm.bin");
+        //File languageModel = new File(assetsDir, "zh_cn.lm.bin");
         recognizer.addNgramSearch(FORECAST_SEARCH, languageModel);
+        //recognizer.addAllphoneSearch(FORECAST_SEARCH, languageModel);
 
         // Phonetic search
-        File phoneticModel = new File(assetsDir, "en-phone.dmp");
-        recognizer.addAllphoneSearch(PHONE_SEARCH, phoneticModel);
+        //File phoneticModel = new File(assetsDir, "en-phone.dmp");
+        //recognizer.addAllphoneSearch(PHONE_SEARCH, phoneticModel);
     }
 
     @Override
@@ -257,6 +267,6 @@ public class PocketSphinxActivity extends Activity implements
 
     @Override
     public void onTimeout() {
-        switchSearch(KWS_SEARCH);
+        switchSearch(DEFAULT_THEME);
     }
 }
